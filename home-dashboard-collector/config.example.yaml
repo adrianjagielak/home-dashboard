@@ -10,3 +10,9 @@ devices:
   "3": "kitchen_light"
   "4": "living_room_heater"
   "5": "bedroom_ac"
+
+# https://mojlicznik.energa-operator.pl
+powerMeter:
+  username: "your-username"
+  password: "your-password"
+  meterId: "your-meter-id"

@@ -2,10 +2,17 @@ import express from "express";
 import bodyParser from "body-parser";
 import fs from "fs/promises";
 import yaml from "js-yaml";
-import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
+import { InfluxDB, QueryApi, WriteApi } from "@influxdata/influxdb-client";
 import readline from "readline";
 import winston from "winston";
 import cron from "node-cron";
+import { initPowerMeterService, updatePowerMeterData } from "./power-meter";
+import {
+  initHAAService,
+  handleHAAEnergyData,
+  aggregateHAAData,
+} from "./haa-service";
+import { AppConfig } from "./config-model";
 
 const app = express();
 const port = 14001;
@@ -57,22 +64,23 @@ const logger = winston.createLogger({
 });
 
 // Configuration
-let config: Record<string, any> = {};
+let config: AppConfig = {} as any;
 const configFilePath = "./config.yaml";
 
 async function loadConfig() {
   try {
     const data = await fs.readFile(configFilePath, "utf-8");
     config = yaml.load(data) as any;
-    logger.info("Configuration loaded successfully", config);
+    logger.info("Configuration loaded successfully");
   } catch (error) {
     logger.error("Failed to load configuration", { error });
-    config = {};
+    config = {} as any;
   }
 }
 
 // InfluxDB setup
 let influxDB: InfluxDB;
+let queryApi: QueryApi;
 let writeApi: WriteApi;
 
 async function setupInfluxDB() {
@@ -94,6 +102,7 @@ async function setupInfluxDB() {
       url: influxdb.url,
       token: influxdb.token,
     });
+    queryApi = influxDB.getQueryApi(influxdb.org);
     writeApi = influxDB.getWriteApi(influxdb.org, influxdb.bucket);
     writeApi.useDefaultTags({ project: "home_dashboard" });
 
@@ -104,120 +113,11 @@ async function setupInfluxDB() {
   }
 }
 
-// Data storage for aggregation
-const deviceData: Record<
-  string,
-  {
-    voltage: number[];
-    current: number[];
-    consumption: number;
-    lastConsumption: number;
-  }
-> = {};
-
-// Endpoint for HAA energy data
 app.post(
   "/collect/haa-energy",
   bodyParser.text({ type: "*/*" }),
-  (req, res) => {
-    try {
-      if (typeof req.body !== "string") {
-        throw new Error("Request body is not a string.");
-      }
-
-      const [deviceId, voltage, current, power, consumption] = req.body
-        .split(",")
-        .map((value, index) => {
-          if (index === 0) return value; // deviceId as string
-          return parseFloat(value); // other fields as numbers
-        });
-
-      const deviceName = config.devices?.[deviceId] || `unknown_${deviceId}`;
-      // Convert kWh to Wh by multiplying by 1000
-      const consumptionValue = (consumption as number) * 1000;
-
-      if (!deviceData[deviceId]) {
-        deviceData[deviceId] = {
-          voltage: [],
-          current: [],
-          consumption: 0,
-          lastConsumption: consumptionValue,
-        };
-      }
-
-      const device = deviceData[deviceId];
-
-      // Update voltage and current arrays
-      device.voltage.push(voltage as number);
-      device.current.push(current as number);
-
-      // Update consumption only if it increases
-      if (consumptionValue >= device.lastConsumption) {
-        device.consumption += consumptionValue - device.lastConsumption;
-        device.lastConsumption = consumptionValue;
-      }
-
-      device.lastConsumption = consumptionValue;
-
-      // Write raw event to InfluxDB
-      const point = new Point("raw_energy")
-        .tag("device", deviceName)
-        .floatField("voltage", voltage as number)
-        .floatField("current", current as number)
-        .floatField("power", power as number)
-        .floatField("total_consumption", consumptionValue);
-
-      writeApi.writePoint(point);
-      logger.debug(`HAA energy data received`, {
-        deviceId,
-        voltage,
-        current,
-        power,
-        consumption,
-      });
-
-      res.status(200).send("Data collected successfully.");
-    } catch (error) {
-      logger.error("Error processing /collect/haa-energy request", { error });
-      res.status(400).send("Invalid data format.");
-    }
-  },
+  handleHAAEnergyData,
 );
-
-function aggregateData() {
-  const now = new Date();
-  const timestamp = new Date(now.setSeconds(0, 0));
-
-  for (const [deviceId, data] of Object.entries(deviceData)) {
-    const deviceName = config.devices?.[deviceId] || `unknown_${deviceId}`;
-    const avgVoltage =
-      data.voltage.reduce((a, b) => a + b, 0) / data.voltage.length || 0;
-    const avgCurrent =
-      data.current.reduce((a, b) => a + b, 0) / data.current.length || 0;
-    const consumption = data.consumption;
-
-    // Write aggregated data to InfluxDB
-    const point = new Point("aggregated_energy")
-      .tag("device", deviceName)
-      .floatField("avg_voltage", avgVoltage)
-      .floatField("avg_current", avgCurrent)
-      .floatField("consumption", consumption)
-      .timestamp(timestamp);
-
-    writeApi.writePoint(point);
-    logger.info("Aggregated data written to InfluxDB", {
-      deviceId,
-      avgVoltage,
-      avgCurrent,
-      consumption,
-    });
-
-    // Reset the data for the next interval
-    data.voltage = [];
-    data.current = [];
-    data.consumption = 0;
-  }
-}
 
 // CLI for refreshing configuration
 const rl = readline.createInterface({
@@ -227,7 +127,6 @@ const rl = readline.createInterface({
 rl.on("line", async (input) => {
   if (input.trim() === "r") {
     await loadConfig();
-    logger.info("Configuration reloaded via CLI command.");
   }
 });
 
@@ -236,11 +135,19 @@ app.listen(port, async () => {
   await loadConfig();
   await setupInfluxDB();
 
-  // Aggregate data every 15th minute
-  cron.schedule("*/15 * * * *", () => {
-    aggregateData();
-  });
+  initHAAService(writeApi, logger, () => config);
+  initPowerMeterService(queryApi, writeApi, logger, () => config);
 
-  logger.info(`Collection & Aggregation Service running on port ${port}`);
-  logger.info('Type "r" to reload the configuration.');
+  // First, update power meter data immediately
+  logger.info("Performing initial power meter data update...");
+  await updatePowerMeterData();
+  logger.info("Initial power meter data update completed");
+
+  // Aggregate HAA data on every 15th minute
+  cron.schedule("*/15 * * * *", () => aggregateHAAData());
+  // Try to update power meter data on 5th and 35th minute
+  cron.schedule("5,35 * * * *", () => updatePowerMeterData());
+
+  logger.info(`Home Dashboard Collector & Aggregator running on :${port}`);
+  logger.info('Type "r" and press Enter to reload the configuration');
 });
