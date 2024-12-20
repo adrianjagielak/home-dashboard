@@ -1,0 +1,29 @@
+{
+  "name": "home-dashboard-collector",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.2",
+    "@types/node-cron": "^3.0.11",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
+    "js-yaml": "^4.1.0",
+    "node-cron": "^3.0.3",
+    "winston": "^3.17.0",
+    "yaml": "^2.6.1"
+  }
+}

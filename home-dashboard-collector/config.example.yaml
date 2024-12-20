@@ -1,0 +1,12 @@
+influxdb:
+  url: "http://localhost:8086"
+  token: "your-influxdb-token"
+  org: "your-org"
+  bucket: "your-bucket"
+
+devices:
+  "1": "fridge"
+  "2": "washing_machine"
+  "3": "kitchen_light"
+  "4": "living_room_heater"
+  "5": "bedroom_ac"
