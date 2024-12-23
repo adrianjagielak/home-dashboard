@@ -1,8 +1,7 @@
-// home-dashboard-collector/src/haa-service.ts
 import { Point, WriteApi } from "@influxdata/influxdb-client";
 import winston from "winston";
 import { Request, Response } from "express";
-import { AppConfig } from "./config-model";
+import { AppConfig } from "../config-model";
 
 interface DeviceData {
   voltage: number[];

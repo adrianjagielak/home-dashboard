@@ -2,7 +2,7 @@ import axios from "axios";
 import { Point, QueryApi, WriteApi } from "@influxdata/influxdb-client";
 import winston from "winston";
 import { subDays, startOfDay, addHours, isBefore } from "date-fns";
-import { AppConfig } from "./config-model";
+import { AppConfig } from "../config-model";
 
 function randomDelay(min: number = 500, max: number = 1000): Promise<void> {
   const ms = Math.floor(Math.random() * (max - min + 1)) + min;

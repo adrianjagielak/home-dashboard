@@ -6,12 +6,15 @@ import { InfluxDB, QueryApi, WriteApi } from "@influxdata/influxdb-client";
 import readline from "readline";
 import winston from "winston";
 import cron from "node-cron";
-import { initPowerMeterService, updatePowerMeterData } from "./power-meter";
+import {
+  initPowerMeterService,
+  updatePowerMeterData,
+} from "./power-meter-service/power-meter-service";
 import {
   initHAAService,
   handleHAAEnergyData,
   aggregateHAAData,
-} from "./haa-service";
+} from "./haa-service/haa-service";
 import { AppConfig } from "./config-model";
 
 const app = express();
