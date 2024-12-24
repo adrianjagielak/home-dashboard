@@ -3,3 +3,4 @@ A modular smart home data collection and control system. This project includes s
 
 Initially designed to optimize energy usage in my personal household under a dynamic pricing plan ([[1]](https://energy.instrat.pl/ceny/energia-rdn-godzinowe/), [[2]](https://www.tge.pl/energia-elektryczna-rdn)), this project has evolved into a general-purpose home automation dashboard.
 
+<img width="1208" alt="img1" src="https://raw.githubusercontent.com/adrianjagielak/home-dashboard/refs/heads/master/docs/img1.png" />
