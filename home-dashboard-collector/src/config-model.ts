@@ -1,3 +1,5 @@
+import { PriceConfig } from "./price-service/price-model";
+
 export interface InfluxDBConfig {
   url: string;
   token: string;
@@ -19,4 +21,5 @@ export interface AppConfig {
   influxdb: InfluxDBConfig;
   powerMeter: PowerMeterConfig;
   devices: HAADevicesConfig;
+  prices: PriceConfig;
 }

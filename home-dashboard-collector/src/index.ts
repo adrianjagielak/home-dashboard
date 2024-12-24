@@ -7,15 +7,22 @@ import readline from "readline";
 import winston from "winston";
 import cron from "node-cron";
 import {
-  initPowerMeterService,
-  updatePowerMeterData,
-} from "./power-meter-service/power-meter-service";
-import {
   initHAAService,
   handleHAAEnergyData,
   aggregateHAAData,
 } from "./haa-service/haa-service";
+import {
+  initPowerMeterService,
+  updatePowerMeterData,
+} from "./power-meter-service/power-meter-service";
+import {
+  initPriceService,
+  performInitialPricesUpdate,
+  updatePrices,
+} from "./price-service/price-service";
+
 import { AppConfig } from "./config-model";
+import axios from "axios";
 
 const app = express();
 const port = 14001;
@@ -65,6 +72,51 @@ const logger = winston.createLogger({
     }),
   ],
 });
+
+function setupAxiosDebugLogging(logger: winston.Logger) {
+  axios.interceptors.request.use(
+    (config) => {
+      logger.debug("Axios Request:", {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        params: config.params,
+        headers: {
+          ...config.headers,
+          Cookie: "(hidden)",
+        },
+      });
+      return config;
+    },
+    (error) => {
+      logger.debug("Axios Request Error:", { error: error.message });
+      return Promise.reject(error);
+    },
+  );
+
+  axios.interceptors.response.use(
+    (response) => {
+      logger.debug("Axios Response:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: {
+          ...response.headers,
+          "set-cookie": "(hidden)",
+        },
+        data: response.data,
+      });
+      return response;
+    },
+    (error) => {
+      logger.debug("Axios Response Error:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        error: error.message,
+      });
+      return Promise.reject(error);
+    },
+  );
+}
 
 // Configuration
 let config: AppConfig = {} as any;
@@ -136,20 +188,22 @@ rl.on("line", async (input) => {
 // Start the server
 app.listen(port, async () => {
   await loadConfig();
+  setupAxiosDebugLogging(logger);
   await setupInfluxDB();
 
   initHAAService(writeApi, logger, () => config);
   initPowerMeterService(queryApi, writeApi, logger, () => config);
+  initPriceService(queryApi, writeApi, logger, () => config);
 
-  // First, update power meter data immediately
-  logger.info("Performing initial power meter data update...");
   await updatePowerMeterData();
-  logger.info("Initial power meter data update completed");
+  await performInitialPricesUpdate();
 
   // Aggregate HAA data on every 15th minute
   cron.schedule("*/15 * * * *", () => aggregateHAAData());
   // Try to update power meter data on 5th and 35th minute
   cron.schedule("5,35 * * * *", () => updatePowerMeterData());
+  // Fetch the latest upcoming energy prices on 5th minute of every hour
+  cron.schedule("5 * * * *", () => updatePrices());
 
   logger.info(`Home Dashboard Collector & Aggregator running on :${port}`);
   logger.info('Type "r" and press Enter to reload the configuration');

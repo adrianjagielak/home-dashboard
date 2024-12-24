@@ -9,51 +9,6 @@ function randomDelay(min: number = 500, max: number = 1000): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function setupAxiosDebugLogging(logger: winston.Logger) {
-  axios.interceptors.request.use(
-    (config) => {
-      logger.debug("Axios Request:", {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        params: config.params,
-        headers: {
-          ...config.headers,
-          Cookie: "(hidden)",
-        },
-      });
-      return config;
-    },
-    (error) => {
-      logger.debug("Axios Request Error:", { error: error.message });
-      return Promise.reject(error);
-    },
-  );
-
-  axios.interceptors.response.use(
-    (response) => {
-      logger.debug("Axios Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        headers: {
-          ...response.headers,
-          "set-cookie": "(hidden)",
-        },
-        data: response.data,
-      });
-      return response;
-    },
-    (error) => {
-      logger.debug("Axios Response Error:", {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        error: error.message,
-      });
-      return Promise.reject(error);
-    },
-  );
-}
-
 interface EnergyReading {
   timestamp: number;
   value: number;
@@ -84,7 +39,6 @@ export function initPowerMeterService(
   influxWriteApi = writeApi;
   logger = log;
 
-  setupAxiosDebugLogging(logger);
   logger.info("Power meter service initialized");
 }
 
@@ -285,6 +239,8 @@ async function processAndStoreData(readings: EnergyReading[]): Promise<void> {
 }
 
 export async function updatePowerMeterData(): Promise<void> {
+  logger.info("Performing initial power meter data update...");
+
   try {
     const lastReading = await getLastSavedReading();
     const now = new Date();

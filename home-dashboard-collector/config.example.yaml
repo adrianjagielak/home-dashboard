@@ -16,3 +16,104 @@ powerMeter:
   username: "your-username"
   password: "your-password"
   meterId: "your-meter-id"
+
+prices:
+  staticTariffs:
+    g11:
+      basePrice: 0.5000
+      akcyza: 0.0050
+      oplataSieciowa: 0.3469
+      oplataJakosciowa: 0.0314
+      oplataKogeneracyjna: 0.00618
+      vat: 0.23
+    g12:
+      peak:
+        basePrice: 0.5000
+        akcyza: 0.0050
+        oplataSieciowa: 0.3827
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        vat: 0.23
+      offPeak:
+        basePrice: 0.4721
+        akcyza: 0.0050
+        oplataSieciowa: 0.0827
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        vat: 0.23
+    g12w:
+      peak:
+        basePrice: 0.5000
+        akcyza: 0.0050
+        oplataSieciowa: 0.4011
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        vat: 0.23
+      offPeak:
+        basePrice: 0.4957
+        akcyza: 0.0050
+        oplataSieciowa: 0.0845
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        vat: 0.23
+    g12r:
+      peak:
+        basePrice: 0.5000
+        akcyza: 0.0050
+        oplataSieciowa: 0.3623
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        vat: 0.23
+      offPeak:
+        basePrice: 0.3796
+        akcyza: 0.0050
+        oplataSieciowa: 0.0878
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        vat: 0.23
+  dynamicTariffs:
+    g11:
+      oplataSieciowa: 0.3469
+      oplataJakosciowa: 0.0314
+      oplataKogeneracyjna: 0.00618
+      oplataHandlowa: 0.1499
+      vat: 0.23
+    g12:
+      peak:
+        oplataSieciowa: 0.3827
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        oplataHandlowa: 0.1499
+        vat: 0.23
+      offPeak:
+        oplataSieciowa: 0.0827
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        oplataHandlowa: 0.1499
+        vat: 0.23
+    g12w:
+      peak:
+        oplataSieciowa: 0.4011
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        oplataHandlowa: 0.1499
+        vat: 0.23
+      offPeak:
+        oplataSieciowa: 0.0845
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        oplataHandlowa: 0.1499
+        vat: 0.23
+    g12r:
+      peak:
+        oplataSieciowa: 0.3623
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        oplataHandlowa: 0.1499
+        vat: 0.23
+      offPeak:
+        oplataSieciowa: 0.0878
+        oplataJakosciowa: 0.0314
+        oplataKogeneracyjna: 0.00618
+        oplataHandlowa: 0.1499
+        vat: 0.23
