@@ -173,8 +173,11 @@ async function calculatePrice(
   tariffType: TariffType,
   tgePrice?: number,
 ): Promise<number | null> {
-  const isPeak = await isPeakHour(date, tariffType);
+  if (tariffType === TariffType.TGE_RAW) {
+    return tgePrice ? tgePrice / 1000 : null;
+  }
 
+  const isPeak = await isPeakHour(date, tariffType);
   const priceConfig = getConfig().prices;
 
   // Handle dynamic tariffs

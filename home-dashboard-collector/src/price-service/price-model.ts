@@ -36,6 +36,7 @@ export enum TariffType {
   DYNAMIC_G12 = "DYNAMIC_G12",
   DYNAMIC_G12W = "DYNAMIC_G12W",
   DYNAMIC_G12R = "DYNAMIC_G12R",
+  TGE_RAW = "TGE_RAW",
 }
 
 export interface PriceConfig {
