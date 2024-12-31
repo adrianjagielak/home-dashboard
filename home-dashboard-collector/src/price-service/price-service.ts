@@ -81,7 +81,7 @@ async function getLastSavedPrice(): Promise<Date> {
 export async function performInitialPricesUpdate(): Promise<void> {
   try {
     const lastSavedPrice = await getLastSavedPrice();
-    const now = new Date();
+    const now = alignToNearest15Minutes(new Date());
     let currentDate = startOfDay(lastSavedPrice);
 
     logger.info("Performing initial price update...", {
@@ -107,6 +107,14 @@ export async function performInitialPricesUpdate(): Promise<void> {
       stack: err.stack,
     });
   }
+}
+
+function alignToNearest15Minutes(date: Date): Date {
+  const minutes = date.getMinutes();
+  const remainder = minutes % 15;
+  const alignedDate = new Date(date);
+  alignedDate.setMinutes(minutes - remainder, 0, 0);
+  return alignedDate;
 }
 
 async function fetchTGEPrices(
@@ -260,7 +268,7 @@ async function storePrices(
       tgePrices.map((p) => [p.date, p.fixing_i.price]),
     );
 
-    let currentDate = new Date(startDate);
+    let currentDate = alignToNearest15Minutes(new Date(startDate));
     while (currentDate <= endDate) {
       const exactTimestamp = format(currentDate, "yyyy-MM-dd'T'HH:mm:ss'Z'");
       const hourStart = new Date(currentDate);
@@ -333,7 +341,7 @@ async function storePrices(
 
 export async function updatePrices(): Promise<void> {
   try {
-    const now = new Date();
+    const now = alignToNearest15Minutes(new Date());
     const tomorrow = addDays(now, 1);
 
     // Fetch TGE prices for dynamic tariffs
