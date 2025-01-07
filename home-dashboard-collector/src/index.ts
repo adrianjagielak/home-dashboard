@@ -20,6 +20,11 @@ import {
   performInitialPricesUpdate,
   updatePrices,
 } from "./price-service/price-service";
+import {
+  initTuyaService,
+  refreshTuyaService,
+  aggregateTuyaData,
+} from "./tuya-service/tuya-service";
 
 import { AppConfig } from "./config-model";
 import axios from "axios";
@@ -182,6 +187,7 @@ const rl = readline.createInterface({
 rl.on("line", async (input) => {
   if (input.trim() === "r") {
     await loadConfig();
+    await refreshTuyaService();
   }
 });
 
@@ -194,12 +200,15 @@ app.listen(port, async () => {
   initHAAService(writeApi, logger, () => config);
   initPowerMeterService(queryApi, writeApi, logger, () => config);
   initPriceService(queryApi, writeApi, logger, () => config);
+  initTuyaService(writeApi, logger, () => config);
 
   await updatePowerMeterData();
   await performInitialPricesUpdate();
 
   // Aggregate HAA data on every 15th minute
   cron.schedule("*/15 * * * *", () => aggregateHAAData());
+  // Aggregate Tuya data on every 15th minute
+  cron.schedule("*/15 * * * *", () => aggregateTuyaData());
   // Try to update power meter data on 5th and 35th minute
   cron.schedule("5,35 * * * *", () => updatePowerMeterData());
   // Fetch the latest upcoming energy prices on 5th minute of every hour

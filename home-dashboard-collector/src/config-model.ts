@@ -17,9 +17,16 @@ export interface HAADevicesConfig {
   [deviceId: string]: string; // mapping of device IDs to names
 }
 
+export interface TuyaDeviceConfig {
+  id: string;
+  localKey: string;
+  deviceName: string;
+}
+
 export interface AppConfig {
   influxdb: InfluxDBConfig;
   powerMeter: PowerMeterConfig;
   devices: HAADevicesConfig;
   prices: PriceConfig;
+  tuyaDevices: TuyaDeviceConfig[];
 }

@@ -4,12 +4,22 @@ influxdb:
   org: "your-org"
   bucket: "your-bucket"
 
+# HAA smart socket device mappings (deviceId to human-readable name)
 devices:
   "1": "fridge"
   "2": "washing_machine"
   "3": "kitchen_light"
   "4": "living_room_heater"
   "5": "bedroom_ac"
+
+# Tuya smart socket configurations
+tuyaDevices:
+  - id: "bff1a2b3c4d5e6f7" # Device ID from Tuya developer platform
+    localKey: "84e7a2b3c4d5" # Local key from Tuya developer platform
+    deviceName: "bedroom_heater" # Human-readable name for the device
+  - id: "aee9b8c7d6e5f4a3"
+    localKey: "93f8b7c6d5e4"
+    deviceName: "office_computer"
 
 # https://mojlicznik.energa-operator.pl
 powerMeter:
