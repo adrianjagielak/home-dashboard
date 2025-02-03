@@ -23,10 +23,15 @@ export interface TuyaDeviceConfig {
   deviceName: string;
 }
 
+export interface WallConnectorConfig {
+  ip: string;
+}
+
 export interface AppConfig {
   influxdb: InfluxDBConfig;
   powerMeter: PowerMeterConfig;
   devices: HAADevicesConfig;
   prices: PriceConfig;
   tuyaDevices: TuyaDeviceConfig[];
+  wallConnector: WallConnectorConfig;
 }

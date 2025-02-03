@@ -25,6 +25,11 @@ import {
   refreshTuyaService,
   aggregateTuyaData,
 } from "./tuya-service/tuya-service";
+import {
+  initWallConnectorService,
+  refreshWallConnectorService,
+  aggregateWallConnectorData,
+} from "./wall-connector-service/wall-connector-service";
 
 import { AppConfig } from "./config-model";
 import axios from "axios";
@@ -188,6 +193,7 @@ rl.on("line", async (input) => {
   if (input.trim() === "r") {
     await loadConfig();
     await refreshTuyaService();
+    refreshWallConnectorService();
   }
 });
 
@@ -201,6 +207,7 @@ app.listen(port, async () => {
   initPowerMeterService(queryApi, writeApi, logger, () => config);
   initPriceService(queryApi, writeApi, logger, () => config);
   initTuyaService(writeApi, logger, () => config);
+  initWallConnectorService(writeApi, logger, () => config);
 
   await updatePowerMeterData();
   await performInitialPricesUpdate();
@@ -209,6 +216,8 @@ app.listen(port, async () => {
   cron.schedule("*/15 * * * *", () => aggregateHAAData());
   // Aggregate Tuya data on every 15th minute
   cron.schedule("*/15 * * * *", () => aggregateTuyaData());
+  // Aggregate Tesla Wall Connector data on every 15th minute
+  cron.schedule("*/15 * * * *", () => aggregateWallConnectorData());
   // Try to update power meter data on 5th and 35th minute
   cron.schedule("5,35 * * * *", () => updatePowerMeterData());
   // Fetch the latest upcoming energy prices on 5th minute of every hour
