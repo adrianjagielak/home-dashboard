@@ -127,3 +127,7 @@ prices:
         oplataKogeneracyjna: 0.00618
         oplataHandlowa: 0.1499
         vat: 0.23
+
+wallConnector:
+  # Tesla Wall Connector IP
+  ip: "192.168.69.420"
